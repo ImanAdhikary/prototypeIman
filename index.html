@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sehat Connect - Telemedicine App Prototype</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define custom colors based on the request (blue + green tones) */
+        :root {
+            --color-primary: #4f46e5; /* Indigo 600 */
+            --color-accent: #10b981; /* Emerald 500 */
+        }
+        .bg-primary { background-color: var(--color-primary); }
+        .bg-accent { background-color: var(--color-accent); }
+        .text-primary { color: var(--color-primary); }
+        .text-accent { color: var(--color-accent); }
+        .border-primary { border-color: var(--color-primary); }
+
+        /* General styling for mobile-first prototype */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb; /* Light background */
+            display: flex;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* The App Frame - constrained size for a phone look */
+        #app-frame {
+            width: 100%;
+            max-width: 420px; /* Standard mobile width */
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            position: relative;
+            overflow: hidden;
+            min-height: 100vh;
+        }
+
+        /* Style for individual screens (hidden by default) */
+        .screen {
+            width: 100%;
+            min-height: 100vh;
+            display: none;
+            flex-direction: column; /* Ensure screens are column layouts */
+            padding-bottom: 72px; /* Space for the floating Emergency button */
+        }
+
+        /* Icon styling for the dashboard */
+        .dashboard-icon {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+        
+        /* Utility for the floating emergency button */
+        #emergency-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="sm:pt-10 sm:pb-10">
+
+    <div id="app-frame">
+        <!-- 
+            0. GLOBAL NAVIGATION & NOTIFICATIONS (EMERGENCY BUTTON) 
+            This button is fixed and visible across all main screens.
+        -->
+        <button id="emergency-button" class="flex items-center justify-center p-3 rounded-full shadow-lg bg-red-600 text-white hover:bg-red-700 transition duration-150 transform hover:scale-105" onclick="showMessageBox('🚨 EMERGENCY HELP\n\nContacting the nearest medical facility and sending your location data...', 'bg-red-500');">
+            <!-- Icon: Siren -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 7l2 4M20 7l-2 4M10 7L8 11M4 7l2 4M12 18v3M12 3v3M5 12H2M22 12h-3M19 19l-2-2M17 7l2 2M7 7l-2 2M5 19l2-2"/></svg>
+        </button>
+
+        <!-- 
+            1. WELCOME / LOGIN / SIGNUP SCREEN 
+            (Default Screen)
+        -->
+        <div id="loginScreen" class="screen flex-col items-center justify-center p-6 text-center">
+            <h1 id="appTitle" class="text-5xl font-extrabold text-primary mb-2">Sehat Connect</h1>
+            <p id="appSubtitle" class="text-lg text-gray-500 mb-8">Digital Health for Every Village</p>
+
+            <!-- LOGO: Using the provided image -->
+            <img src="logo.png" alt="Sehat Connect Logo" class="w-40 h-40 rounded-3xl mb-12 shadow-xl border-4 border-primary/20 object-cover">
+            
+            <!-- Interface Language Selector -->
+            <div class="w-full max-w-xs space-y-4 mb-8">
+                <select id="interfaceLanguage" onchange="changeInterfaceLanguage()" class="w-full py-2 px-3 border border-gray-300 rounded-xl text-md text-gray-700 focus:ring-primary focus:border-primary shadow-sm">
+                    <option value="en">English (Interface Language)</option>
+                    <option value="hi">हिन्दी (Hindi)</option>
+                    <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+                </select>
+            </div>
+
+            <div class="w-full max-w-xs space-y-4">
+                <button id="loginPatientBtn" onclick="navigate('patientDashboard')" class="w-full py-4 text-xl font-semibold rounded-xl text-white bg-primary hover:bg-indigo-700 transition duration-150 shadow-lg">
+                    Login as Patient
+                </button>
+                <button id="loginDoctorBtn" onclick="navigate('doctorDashboard')" class="w-full py-4 text-xl font-semibold rounded-xl text-primary border-2 border-primary hover:bg-indigo-50 transition duration-150">
+                    Login as Doctor
+                </button>
+                <a id="signupLink" href="#" class="block pt-4 text-sm text-gray-500 hover:text-primary transition duration-150">
+                    New User? Sign Up Here
+                </a>
+            </div>
+        </div>
+
+        <!-- 
+            2. PATIENT HOME DASHBOARD 
+        -->
+        <div id="patientDashboard" class="screen pt-8 px-6">
+            <header class="mb-8">
+                <div class="flex justify-between items-center">
+                    <h2 id="helloRamu" class="text-3xl font-bold text-gray-800">Hello, Ramu!</h2>
+                    <button class="text-primary hover:text-indigo-700 p-2 rounded-full" onclick="showMessageBox('🔔 NOTIFICATIONS (2 New)\n\n- Dr. Sharma sent a follow-up reminder.\n- Medicine order #987 is out for delivery.', 'bg-primary')">
+                        <!-- Icon: Bell -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.375 22a2 2 0 1 0 3.25 0"/></svg>
+                    </button>
+                </div>
+                <p id="nextAppt" class="text-gray-500">Your next appointment: Tuesday, 10:00 AM</p>
+            </header>
+
+            <!-- Updated Grid for 6 options (3 rows, 2 columns) -->
+            <div class="grid grid-cols-2 gap-4">
+                <!-- 1. Book Appointment -->
+                <button onclick="navigate('doctorSelectionScreen')" class="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-200 border border-gray-100 hover:border-primary/50 h-36">
+                    <span class="dashboard-icon text-primary">🗓️</span>
+                    <span id="bookAppt" class="mt-3 text-lg font-semibold text-gray-700">Book Appointment</span>
+                </button>
+
+                <!-- 2. Video Consultation -->
+                <button onclick="navigate('videoConsultationScreen')" class="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-200 border border-gray-100 hover:border-accent/50 h-36">
+                    <span class="dashboard-icon text-accent">🎥</span>
+                    <span id="videoConsult" class="mt-3 text-lg font-semibold text-gray-700">Video Consult</span>
+                </button>
+
+                <!-- 3. Health Records -->
+                <button onclick="navigate('healthRecordsScreen')" class="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-200 border border-gray-100 hover:border-primary/50 h-36">
+                    <span class="dashboard-icon text-primary">❤️</span>
+                    <span id="healthRecords" class="mt-3 text-lg font-semibold text-gray-700">Health Records</span>
+                </button>
+
+                <!-- 4. Medicine Delivery -->
+                <button onclick="navigate('medicineDeliveryScreen')" class="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-200 border border-gray-100 hover:border-accent/50 h-36">
+                    <span class="dashboard-icon text-accent">💊</span>
+                    <span id="medDelivery" class="mt-3 text-lg font-semibold text-gray-700">Medicine Delivery</span>
+                </button>
+                
+                <!-- 5. NEW: Bed Availability -->
+                <button onclick="navigate('bedAvailabilityScreen')" class="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-200 border border-gray-100 hover:border-primary/50 h-36">
+                    <span class="dashboard-icon text-primary">🏥</span>
+                    <span id="bedAvail" class="mt-3 text-lg font-semibold text-gray-700">Bed Availability</span>
+                </button>
+
+                <!-- 6. NEW: Medicine Stock -->
+                <button onclick="navigate('medicineAvailabilityScreen')" class="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-200 border border-gray-100 hover:border-accent/50 h-36">
+                    <span class="dashboard-icon text-accent">📦</span>
+                    <span id="medStock" class="mt-3 text-lg font-semibold text-gray-700">Medicine Stock</span>
+                </button>
+            </div>
+            
+            <button id="logOutBtn" onclick="navigate('loginScreen')" class="mt-12 w-full py-3 text-sm font-medium rounded-lg text-gray-500 hover:text-red-500 transition duration-150">
+                ← Log Out
+            </button>
+        </div>
+        
+        <!-- 
+            3. DOCTOR SELECTION & APPOINTMENT BOOKING SCREEN (Availability functional)
+        -->
+        <div id="doctorSelectionScreen" class="screen pt-8 px-6">
+            <button onclick="navigate('patientDashboard')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                <span class="ml-1">Back</span>
+            </button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Book Your Consultation</h2>
+            
+            <!-- Filters - Language removed, Availability functional -->
+            <div class="flex space-x-2 mb-6 text-sm">
+                <select id="specializationFilter" onchange="filterDoctors()" class="p-2 border rounded-lg bg-white shadow-sm focus:ring-primary focus:border-primary flex-grow">
+                    <option value="All">Specialization (All)</option>
+                    <option value="General Physician">General Physician</option>
+                    <option value="Pediatrician">Pediatrician</option>
+                    <option value="Dermatologist">Dermatologist</option>
+                    <option value="Cardiologist">Cardiologist</option>
+                </select>
+                <select id="availabilityFilter" onchange="filterDoctors()" class="p-2 border rounded-lg bg-white shadow-sm focus:ring-primary focus:border-primary flex-grow">
+                    <option value="All">Availability (All)</option>
+                    <option value="Today">Today</option>
+                    <option value="Tomorrow">Tomorrow</option>
+                </select>
+            </div>
+
+            <!-- Doctor List Container - Content now generated by JS on load/filter -->
+            <div id="doctorListContainer" class="space-y-4">
+                <!-- Doctor cards will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- 
+            4. VIDEO CONSULTATION SCREEN (Updated for working chat)
+        -->
+        <div id="videoConsultationScreen" class="screen flex-col pt-0">
+            <!-- Simulated Video Window with Vitals Placeholder -->
+            <div class="relative h-64 bg-gray-800 flex flex-col justify-between p-3 text-white">
+                <div class="flex justify-between items-start">
+                    <div class="bg-red-500 text-xs px-2 py-1 rounded">LIVE CONSULT</div>
+                    <div class="w-20 h-20 bg-gray-700 border-2 border-white rounded-lg flex items-center justify-center text-sm">
+                        Patient View
+                    </div>
+                </div>
+                <!-- Vitals Placeholder -->
+                <div class="p-2 bg-black bg-opacity-50 rounded-lg">
+                    <p class="text-xs font-semibold text-accent">Patient Vitals (Live Data):</p>
+                    <p class="text-xs">Heart Rate: 85 bpm | Temp: 98.6°F | SpO2: 97%</p>
+                </div>
+            </div>
+
+            <div class="flex-grow p-4 bg-gray-50 overflow-y-auto flex flex-col">
+                <div class="bg-white p-4 rounded-xl shadow-md mb-4 flex-grow flex flex-col">
+                    <p class="font-semibold text-gray-700 mb-2">Chat with Doctor</p>
+                    <!-- Chat Messages Area -->
+                    <div id="chatMessages" class="space-y-2 flex-grow overflow-y-auto border p-2 rounded-lg text-sm bg-gray-50 max-h-40">
+                        <div class="text-left text-xs"><span class="bg-green-100 p-2 rounded-lg inline-block">Dr. Sharma: Hello Ramu, how can I help you today?</span></div>
+                    </div>
+                    
+                    <!-- Message Input -->
+                    <div class="flex mt-3">
+                        <input id="chatInput" type="text" placeholder="Type a message..." class="flex-grow p-2 border rounded-l-lg focus:outline-none focus:ring-1 focus:ring-primary">
+                        <button onclick="sendMessage()" class="bg-primary text-white p-2 rounded-r-lg hover:bg-indigo-700 transition">Send</button>
+                    </div>
+                </div>
+
+                <!-- Call Actions -->
+                <div class="space-y-4">
+                    <button onclick="showMessageBox('📄 Prescription uploaded successfully!', 'bg-accent')" class="w-full py-3 bg-accent text-white rounded-xl font-semibold shadow-md hover:bg-emerald-600 transition">
+                        Upload Medical Report / Prescription
+                    </button>
+                    <button onclick="showMessageBox('🔄 Follow-up appointment scheduled for 3 days from now.', 'bg-primary')" class="w-full py-3 bg-indigo-100 text-primary rounded-xl font-semibold hover:bg-indigo-200 transition">
+                        Schedule Follow-up
+                    </button>
+                </div>
+            </div>
+
+            <!-- Call Controls -->
+            <div class="bg-white p-4 flex justify-around items-center border-t">
+                <button class="flex flex-col items-center text-gray-600 hover:text-primary transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V9"/><path d="M8 12h8"/></svg>
+                    <span class="text-xs mt-1">Mute</span>
+                </button>
+                <button onclick="showMessageBox('Audio Only Mode Activated - Better for low network.', 'bg-accent')" class="flex flex-col items-center text-gray-600 hover:text-accent transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0 -20z"/><path d="M10 12l4 -2l0 4z"/></svg>
+                    <span class="text-xs mt-1 font-semibold">Audio Only</span>
+                </button>
+                <button onclick="navigate('patientDashboard')" class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-red-600 transition transform hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2l-2 2h-4a2 2 0 0 0 -2 2v16a2 2 0 0 0 2 2h16a2 2 0 0 0 2 -2v-16a2 2 0 0 0 -2 -2h-4l-2 -2z"/></svg>
+                </button>
+                <button class="flex flex-col items-center text-gray-600 hover:text-primary transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 2.8c-2.43 0 -5.5 1.7 -5.5 5.5v7.2c0 3.8 3.07 5.5 5.5 5.5c2.43 0 5.5 -1.7 5.5 -5.5v-7.2c0 -3.8 -3.07 -5.5 -5.5 -5.5z"/><path d="M9 12h-4"/></svg>
+                    <span class="text-xs mt-1">Camera</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 
+            5. MEDICINE DELIVERY SCREEN 
+        -->
+        <div id="medicineDeliveryScreen" class="screen pt-8 px-6">
+            <button onclick="navigate('patientDashboard')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                <span class="ml-1">Back</span>
+            </button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Medicine Delivery</h2>
+            
+            <!-- Tracking Card -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-6 border-l-4 border-accent">
+                <p class="font-bold text-lg text-accent mb-2">Order #987</p>
+                <p class="text-2xl font-extrabold text-gray-800">Out for Delivery</p>
+                <p class="text-sm text-gray-500 mb-4">Estimated arrival: Today by 6:00 PM</p>
+                
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-primary font-semibold">Ordered</span>
+                    <span class="text-accent font-semibold">Packed</span>
+                    <span class="font-extrabold text-accent">Out for Delivery</span>
+                    <span class="text-gray-400">Delivered</span>
+                </div>
+                <div class="h-2 bg-gray-200 rounded-full mt-1">
+                    <div class="h-2 bg-accent rounded-full" style="width: 75%;"></div>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">New Order</h3>
+            <div class="p-4 bg-white rounded-xl shadow-md space-y-3">
+                <p class="text-sm text-gray-600">Upload Doctor's Prescription or select from history.</p>
+                <button class="w-full py-3 bg-primary text-white rounded-lg font-semibold hover:bg-indigo-700 transition" onclick="showMessageBox('Uploading prescription...\n\nOrder placed successfully!', 'bg-primary')">
+                    Upload Prescription & Order
+                </button>
+            </div>
+        </div>
+
+        <!-- 
+            6. HEALTH RECORDS SCREEN 
+        -->
+        <div id="healthRecordsScreen" class="screen pt-8 px-6">
+            <button onclick="navigate('patientDashboard')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                <span class="ml-1">Back</span>
+            </button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">My Health Records</h2>
+            
+            <div class="space-y-4">
+                <!-- Record 1 -->
+                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-primary">
+                    <p class="font-semibold text-lg text-primary">Prescription - Fever (June 2024)</p>
+                    <p class="text-sm text-gray-600">Dr. S. K. Singh</p>
+                    <button class="mt-2 text-xs text-accent hover:underline">Download/View</button>
+                </div>
+                
+                <!-- Record 2 -->
+                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-accent">
+                    <p class="font-semibold text-lg text-accent">Lab Report - Blood Test (May 2024)</p>
+                    <p class="text-sm text-gray-600">Village Diagnostic Center</p>
+                    <button class="mt-2 text-xs text-primary hover:underline">Download/View</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 
+            7. NEW: DOCTOR DASHBOARD (Placeholder)
+        -->
+        <div id="doctorDashboard" class="screen pt-8 px-6">
+            <button onclick="navigate('loginScreen')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                <span class="ml-1">Log Out</span>
+            </button>
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800">Welcome, Dr. Sharma!</h2>
+                <p class="text-gray-500">Your Consultations Dashboard</p>
+            </header>
+
+            <div class="grid grid-cols-1 gap-4">
+                <div class="p-5 bg-primary text-white rounded-xl shadow-lg">
+                    <p class="text-4xl font-extrabold">3</p>
+                    <p class="text-sm mt-1">Pending Appointments Today</p>
+                </div>
+                <div class="p-4 bg-white rounded-xl shadow-md border border-accent/20">
+                    <p class="font-semibold text-lg text-accent">Next Consult: Ramu S.</p>
+                    <p class="text-sm text-gray-600">Time: 10:00 AM | Language: Hindi</p>
+                    <button onclick="navigate('videoConsultationScreen')" class="mt-3 bg-accent text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-emerald-600 transition">
+                        Start Consult
+                    </button>
+                </div>
+                <!-- UPDATED BUTTON to navigate to the new records screen -->
+                <button onclick="navigate('patientRecordsManagementScreen')" class="w-full py-3 bg-indigo-100 text-primary rounded-xl font-semibold hover:bg-indigo-200 transition">
+                    View All Patient Records
+                </button>
+            </div>
+            
+            <button onclick="navigate('loginScreen')" class="mt-12 w-full py-3 text-sm font-medium rounded-lg text-gray-500 hover:text-red-500 transition duration-150">
+                ← Log Out
+            </button>
+        </div>
+        
+        <!-- 
+            8. NEW: BED AVAILABILITY SCREEN (Placeholder)
+        -->
+        <div id="bedAvailabilityScreen" class="screen pt-8 px-6">
+            <button onclick="navigate('patientDashboard')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                <span class="ml-1">Back</span>
+            </button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Live Bed Availability</h2>
+            
+            <div class="space-y-4">
+                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-accent">
+                    <p class="font-semibold text-lg text-accent">District Hospital, [City Name]</p>
+                    <p class="text-sm text-gray-600">General Beds Available: <span class="font-bold text-green-600">12</span></p>
+                    <p class="text-sm text-gray-600">ICU Beds Available: <span class="font-bold text-yellow-600">2</span></p>
+                </div>
+                
+                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-red-500">
+                    <p class="font-semibold text-lg text-primary">Rural Health Center, [Village A]</p>
+                    <p class="text-sm text-gray-600">General Beds Available: <span class="font-bold text-red-600">0</span></p>
+                    <p class="text-sm text-gray-600">Last Updated: 5 minutes ago</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 
+            9. NEW: MEDICINE AVAILABILITY SCREEN (Placeholder)
+        -->
+        <div id="medicineAvailabilityScreen" class="screen pt-8 px-6">
+            <button onclick="navigate('patientDashboard')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                <span class="ml-1">Back</span>
+            </button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Medicine Stock Check</h2>
+            
+            <div class="space-y-4">
+                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-accent">
+                    <p class="font-semibold text-lg text-accent">Paracetamol 500mg</p>
+                    <p class="text-sm text-gray-600">Local Pharmacy (Village Center): <span class="font-bold text-green-600">In Stock (100+ units)</span></p>
+                </div>
+                
+                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-red-500">
+                    <p class="font-semibold text-lg text-primary">Amoxicillin 250mg</p>
+                    <p class="text-sm text-gray-600">Local Pharmacy (Village Center): <span class="font-bold text-red-600">Low Stock (5 units)</span></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 
+            10. NEW: PATIENT RECORDS MANAGEMENT SCREEN (For Doctors)
+        -->
+        <div id="patientRecordsManagementScreen" class="screen pt-8 px-6">
+            <button onclick="navigate('doctorDashboard')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                <span class="ml-1">Back to Dashboard</span>
+            </button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Patient Records Management</h2>
+            
+            <!-- Search and Filter -->
+            <div class="mb-4">
+                <input type="text" placeholder="Search by Patient Name or ID..." class="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-primary focus:border-primary">
+            </div>
+
+            <!-- Patient List -->
+            <div class="space-y-3 overflow-y-auto flex-grow">
+                <!-- Patient Record 1 -->
+                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-accent flex justify-between items-center">
+                    <div>
+                        <p class="font-semibold text-lg text-accent">Ramu Singh (ID: 4501)</p>
+                        <p class="text-sm text-gray-600">Last Visit: Today, 10:00 AM</p>
+                        <p class="text-xs text-red-500 font-medium">Flag: High BP History</p>
+                    </div>
+                    <button onclick="showMessageBox('Viewing detailed record for Ramu Singh...', 'bg-accent')" class="bg-primary text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">
+                        View/Edit
+                    </button>
+                </div>
+
+                <!-- Patient Record 2 -->
+                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-primary flex justify-between items-center">
+                    <div>
+                        <p class="font-semibold text-lg text-primary">Priya Das (ID: 1022)</p>
+                        <p class="text-sm text-gray-600">Last Visit: 2 weeks ago</p>
+                        <p class="text-xs text-gray-400">Flag: None</p>
+                    </div>
+                    <button onclick="showMessageBox('Viewing detailed record for Priya Das...', 'bg-accent')" class="bg-primary text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">
+                        View/Edit
+                    </button>
+                </div>
+                
+                <!-- Patient Record 3 -->
+                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-accent flex justify-between items-center">
+                    <div>
+                        <p class="font-semibold text-lg text-accent">Kishan Lal (ID: 7891)</p>
+                        <p class="text-sm text-gray-600">Last Visit: 1 month ago</p>
+                        <p class="text-xs text-gray-400">Flag: None</p>
+                    </div>
+                    <button onclick="showMessageBox('Viewing detailed record for Kishan Lal...', 'bg-accent')" class="bg-primary text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">
+                        View/Edit
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+        
+        <!-- Custom Alert/Message Box (No use of alert()) -->
+        <div id="messageBox" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm transform transition-all duration-300 scale-100">
+                <div id="messageBoxIcon" class="text-4xl text-center mb-4"></div>
+                <div id="messageBoxText" class="text-center text-gray-700 whitespace-pre-line font-medium"></div>
+                <button onclick="hideMessageBox()" class="mt-6 w-full py-3 bg-primary text-white rounded-lg font-semibold hover:bg-indigo-700 transition">
+                    Close
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- GLOBAL TRANSLATION DATA AND STATE ---
+        let currentLanguage = 'en'; // Global state for selected language
+
+        const translations = {
+            'en': {
+                'appTitle': 'Sehat Connect',
+                'appSubtitle': 'Digital Health for Every Village',
+                'interfaceSelector': 'English (Interface Language)',
+                'loginPatient': 'Login as Patient',
+                'loginDoctor': 'Login as Doctor',
+                'signupLink': 'New User? Sign Up Here',
+                'hello': 'Hello, Ramu!',
+                'nextAppt': 'Your next appointment: Tuesday, 10:00 AM',
+                'bookAppt': 'Book Appointment',
+                'videoConsult': 'Video Consult',
+                'healthRecords': 'Health Records',
+                'medDelivery': 'Medicine Delivery',
+                'bedAvail': 'Bed Availability',
+                'medStock': 'Medicine Stock',
+                'logOut': '← Log Out'
+            },
+            'hi': {
+                'appTitle': 'सेहत कनेक्ट',
+                'appSubtitle': 'हर गाँव के लिए डिजिटल स्वास्थ्य',
+                'interfaceSelector': 'हिन्दी (Hindi)',
+                'loginPatient': 'रोगी के रूप में लॉगिन करें',
+                'loginDoctor': 'डॉक्टर के रूप में लॉगिन करें',
+                'signupLink': 'नया उपयोगकर्ता? यहाँ साइन अप करें',
+                'hello': 'नमस्ते, रामू!',
+                'nextAppt': 'आपका अगला अपॉइंटमेंट: मंगलवार, सुबह 10:00 बजे',
+                'bookAppt': 'अपॉइंटमेंट बुक करें',
+                'videoConsult': 'वीडियो परामर्श',
+                'healthRecords': 'स्वास्थ्य रिकॉर्ड',
+                'medDelivery': 'दवा वितरण',
+                'bedAvail': 'बेड की उपलब्धता',
+                'medStock': 'दवा स्टॉक',
+                'logOut': '← लॉग आउट करें'
+            },
+            'pa': {
+                'appTitle': 'ਸਿਹਤ ਕਨੈਕਟ',
+                'appSubtitle': 'ਹਰ ਪਿੰਡ ਲਈ ਡਿਜੀਟਲ ਸਿਹਤ',
+                'interfaceSelector': 'ਪੰਜਾਬੀ (Punjabi)',
+                'loginPatient': 'ਮਰੀਜ਼ ਵਜੋਂ ਲੌਗਇਨ ਕਰੋ',
+                'loginDoctor': 'ਡਾਕਟਰ ਵਜੋਂ ਲੌਗਇਨ ਕਰੋ',
+                'signupLink': 'ਨਵਾਂ ਯੂਜ਼ਰ? ਇੱਥੇ ਸਾਈਨ ਅੱਪ ਕਰੋ',
+                'hello': 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਰਾਮੂ!',
+                'nextAppt': 'ਤੁਹਾਡੀ ਅਗਲੀ ਮੁਲਾਕਾਤ: ਮੰਗਲਵਾਰ, ਸਵੇਰੇ 10:00 ਵਜੇ',
+                'bookAppt': 'ਅਪੌਇੰਟਮੈਂਟ ਬੁੱਕ ਕਰੋ',
+                'videoConsult': 'ਵੀਡੀਓ ਸਲਾਹ',
+                'healthRecords': 'ਸਿਹਤ ਰਿਕਾਰਡ',
+                'medDelivery': 'ਦਵਾਈ ਡਿਲੀਵਰੀ',
+                'bedAvail': 'ਬੈੱਡ ਦੀ ਉਪਲਬਧਤਾ',
+                'medStock': 'ਦਵਾਈ ਦਾ ਸਟਾਕ',
+                'logOut': '← ਲੌਗ ਆਉਟ'
+            }
+        };
+
+        /**
+         * Applies the selected language translations to the visible screen elements.
+         * @param {string} lang - The language code ('en', 'hi', 'pa').
+         */
+        function applyTranslations(lang) {
+            const t = translations[lang] || translations['en']; // Fallback
+            currentLanguage = lang;
+
+            // 1. LOGIN SCREEN ELEMENTS
+            if (screens.loginScreen) {
+                document.getElementById('appTitle').innerText = t.appTitle;
+                document.getElementById('appSubtitle').innerText = t.appSubtitle;
+                document.getElementById('loginPatientBtn').innerText = t.loginPatient;
+                document.getElementById('loginDoctorBtn').innerText = t.loginDoctor;
+                document.getElementById('signupLink').innerText = t.signupLink;
+            }
+
+            // 2. PATIENT DASHBOARD ELEMENTS
+            if (screens.patientDashboard) {
+                document.getElementById('helloRamu').innerText = t.hello;
+                document.getElementById('nextAppt').innerText = t.nextAppt;
+                
+                document.getElementById('bookAppt').innerText = t.bookAppt;
+                document.getElementById('videoConsult').innerText = t.videoConsult;
+                document.getElementById('healthRecords').innerText = t.healthRecords;
+                document.getElementById('medDelivery').innerText = t.medDelivery;
+                document.getElementById('bedAvail').innerText = t.bedAvail;
+                document.getElementById('medStock').innerText = t.medStock;
+                
+                document.getElementById('logOutBtn').innerText = t.logOut;
+            }
+        }
+
+        /**
+         * Triggered when the language dropdown changes. Sets the global language and updates the interface.
+         */
+        function changeInterfaceLanguage() {
+            const lang = document.getElementById('interfaceLanguage').value;
+            
+            // 1. Apply translations to ALL relevant screen elements, regardless of visibility
+            applyTranslations(lang); 
+
+            // 2. Show confirmation message
+            let message = '';
+            if (lang === 'en') {
+                message = 'Interface language successfully changed to English.';
+            } else if (lang === 'hi') {
+                message = 'इंटरफ़ेस भाषा सफलतापूर्वक हिन्दी पर बदल दी गई है।\n(Interface language successfully changed to Hindi.)';
+            } else if (lang === 'pa') {
+                message = 'ਇੰਟਰਫੇਸ ਭਾਸ਼ਾ ਸਫਲਤਾਪੂਰਵਕ ਪੰਜਾਬੀ ਤੇ ਬਦਲ ਦਿੱਤੀ ਗਈ ਹੈ।\n(Interface language successfully changed to Punjabi.)';
+            }
+            showMessageBox(message, 'bg-accent');
+        }
+
+
+        // --- DOCTOR DATA & FILTERING LOGIC ---
+
+        const initialDoctors = [
+            // Added explicit 'availableToday' boolean for filtering
+            { id: 1, name: "Dr. Priya Sharma", spec: "General Physician", lang: "Hindi", availTime: "Available Today: 3:00 PM", availableToday: true, status: "Available" },
+            { id: 2, name: "Dr. Amit Patel", spec: "Pediatrician", lang: "Gujarati", availTime: "Next Slot: Tomorrow", availableToday: false, status: "Booked" },
+            { id: 3, name: "Dr. John D'Souza", spec: "Dermatologist", lang: "English, Punjabi", availTime: "Available Today: 5:30 PM", availableToday: true, status: "Available" },
+            { id: 4, name: "Dr. Kavita Singh", spec: "General Physician", lang: "Punjabi", availTime: "Available Today: 4:00 PM", availableToday: true, status: "Available" },
+            { id: 5, name: "Dr. Zubin Mehta", spec: "Cardiologist", lang: "English", availTime: "Next Slot: Tomorrow", availableToday: false, status: "Available" },
+            { id: 6, name: "Dr. Rani Kumari", spec: "General Physician", lang: "Hindi", availTime: "Available Today: 1:00 PM", availableToday: true, status: "Available" },
+            { id: 7, name: "Dr. Harsh Verma", spec: "Pediatrician", lang: "Marathi", availTime: "Next Slot: Tomorrow", availableToday: false, status: "Available" },
+            { id: 8, name: "Dr. Soniya Rao", spec: "Dermatologist", lang: "Hindi", availTime: "Available Today: 6:00 PM", availableToday: true, status: "Available" },
+        ];
+
+        /**
+         * Renders the doctor list based on the provided array.
+         * @param {Array<Object>} doctors - Array of doctor objects.
+         */
+        function renderDoctors(doctors) {
+            const container = document.getElementById('doctorListContainer');
+            if (!container) return;
+
+            if (doctors.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-gray-500 rounded-xl bg-gray-50">No doctors found matching your criteria.</div>`;
+                return;
+            }
+
+            container.innerHTML = doctors.map(doctor => {
+                const isAvailable = doctor.status === "Available";
+                const bgColor = isAvailable ? 'border-primary/10' : 'border-gray-200';
+                const statusColor = isAvailable ? 'text-accent font-semibold' : 'text-gray-400';
+                const buttonClass = isAvailable ? 'bg-accent text-white hover:bg-emerald-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed';
+                const buttonText = isAvailable ? 'Book Slot' : 'Fully Booked';
+                
+                return `
+                    <div class="p-4 bg-white rounded-xl shadow-md border ${bgColor} flex justify-between items-center">
+                        <div>
+                            <p class="font-semibold text-lg text-primary">${doctor.name}</p>
+                            <p class="text-sm text-gray-600">${doctor.spec} | Speaks ${doctor.lang}</p>
+                            <p class="text-xs ${statusColor}">${doctor.availTime}</p>
+                        </div>
+                        <button onclick="${isAvailable ? "navigate('videoConsultationScreen')" : "void(0)"}" 
+                                class="${buttonClass} py-2 px-4 rounded-lg text-sm font-semibold transition">
+                            ${buttonText}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /**
+         * Filters the rendered doctor list based on selected dropdown values.
+         */
+        function filterDoctors() {
+            const specFilter = document.getElementById('specializationFilter').value;
+            const availFilter = document.getElementById('availabilityFilter').value;
+            
+            const filteredDoctors = initialDoctors.filter(doctor => {
+                const specMatch = specFilter === 'All' || doctor.spec === specFilter;
+                
+                let availMatch = true;
+                if (availFilter === 'Today') {
+                    availMatch = doctor.availableToday;
+                } else if (availFilter === 'Tomorrow') {
+                    availMatch = !doctor.availableToday;
+                }
+                
+                return specMatch && availMatch;
+            });
+
+            renderDoctors(filteredDoctors);
+        }
+
+
+        // --- CHAT MESSAGING LOGIC ---
+
+        /**
+         * Handles sending a message from the patient input field.
+         */
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageText = input.value.trim();
+
+            if (messageText === "") return;
+
+            // Create new message bubble for the patient (right-aligned, blue bubble)
+            const newMessage = document.createElement('div');
+            newMessage.className = 'text-right text-xs';
+            newMessage.innerHTML = `<span class="bg-blue-100 p-2 rounded-lg inline-block max-w-[80%]">${messageText}</span>`;
+            
+            messagesContainer.appendChild(newMessage);
+            
+            // Clear input and scroll to bottom
+            input.value = '';
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Optional: Simulate a quick doctor response (for prototype only)
+            if (messageText.toLowerCase().includes("pain")) {
+                setTimeout(() => {
+                    const docMessage = document.createElement('div');
+                    docMessage.className = 'text-left text-xs';
+                    docMessage.innerHTML = `<span class="bg-green-100 p-2 rounded-lg inline-block max-w-[80%]">Dr. Sharma: Thank you. I am reviewing your vitals now.</span>`;
+                    messagesContainer.appendChild(docMessage);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }, 1500);
+            }
+        }
+
+        // --- PROTOTYPE NAVIGATION LOGIC ---
+
+        // Map of screens
+        const screens = {
+            loginScreen: document.getElementById('loginScreen'),
+            patientDashboard: document.getElementById('patientDashboard'),
+            doctorSelectionScreen: document.getElementById('doctorSelectionScreen'),
+            videoConsultationScreen: document.getElementById('videoConsultationScreen'),
+            medicineDeliveryScreen: document.getElementById('medicineDeliveryScreen'),
+            healthRecordsScreen: document.getElementById('healthRecordsScreen'),
+            doctorDashboard: document.getElementById('doctorDashboard'), 
+            bedAvailabilityScreen: document.getElementById('bedAvailabilityScreen'), 
+            medicineAvailabilityScreen: document.getElementById('medicineAvailabilityScreen'), 
+            patientRecordsManagementScreen: document.getElementById('patientRecordsManagementScreen'), 
+        };
+
+        let currentScreen = 'loginScreen';
+
+        /**
+         * Navigates to a new screen and updates the URL hash for history/back button support.
+         * @param {string} screenId - The ID of the screen to navigate to.
+         */
+        function navigate(screenId) {
+            if (currentScreen) {
+                // Ensure the current screen is hidden before navigating
+                const current = screens[currentScreen];
+                if (current) current.style.display = 'none';
+            }
+            
+            currentScreen = screenId;
+            const next = screens[currentScreen];
+            if (next) {
+                next.style.display = 'flex'; // Use 'flex' for all screens now
+            }
+            
+            window.location.hash = screenId;
+            window.scrollTo(0, 0); // Scroll to top on navigation
+
+            // IMPORTANT: Re-apply translations when the patient dashboard becomes visible
+            if (screenId === 'patientDashboard') {
+                applyTranslations(currentLanguage);
+            }
+        }
+
+        // Initialize the prototype based on hash or default
+        window.onload = function() {
+            // Render doctors immediately upon loading
+            renderDoctors(initialDoctors);
+            
+            const hash = window.location.hash.substring(1);
+            if (hash && screens[hash]) {
+                currentScreen = hash;
+            }
+            screens[currentScreen].style.display = 'flex';
+            
+            // Initial translation application for the login screen
+            applyTranslations(document.getElementById('interfaceLanguage').value);
+        };
+
+        // Handle back/forward buttons using hashchange
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash.substring(1);
+            if (hash && screens[hash] && hash !== currentScreen) {
+                navigate(hash);
+            } else if (!hash) {
+                 navigate('loginScreen');
+            }
+        });
+        
+        // Allow sending message by pressing Enter key on the chat input
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const chatInput = document.getElementById('chatInput');
+                if (chatInput && chatInput === document.activeElement) {
+                    sendMessage();
+                }
+            }
+        });
+
+        // --- CUSTOM MESSAGE BOX LOGIC (replaces alert()) ---
+
+        const messageBox = document.getElementById('messageBox');
+        const messageBoxText = document.getElementById('messageBoxText');
+        const messageBoxIcon = document.getElementById('messageBoxIcon');
+
+        function showMessageBox(message, iconBgColor = 'bg-primary') {
+            messageBoxIcon.className = 'text-4xl text-center mb-4 text-white p-2 rounded-full mx-auto w-14 h-14 flex items-center justify-center ' + iconBgColor;
+            
+            let iconSymbol = 'ℹ️'; 
+            if (message.includes('EMERGENCY')) { iconSymbol = '🚨'; }
+            else if (message.includes('successfully')) { iconSymbol = '✅'; }
+            else if (message.includes('Coming Soon') || message.includes('coming soon')) { iconSymbol = '👨‍💻'; }
+            else if (message.includes('Audio Only') || message.includes('हिन्दी') || message.includes('ਪੰਜਾਬੀ')) { iconSymbol = '🔈'; }
+
+
+            messageBoxIcon.innerHTML = iconSymbol;
+            messageBoxText.innerText = message;
+            messageBox.style.display = 'flex';
+        }
+
+        function hideMessageBox() {
+            messageBox.style.display = 'none';
+        }
+
+    </script>
+</body>
+</html>
